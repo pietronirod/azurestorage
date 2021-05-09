@@ -1,3 +1,5 @@
+// Package main provides a function that copy local files to the Microsof Azure Storage
+// i518034
 package main
 
 import (
@@ -18,12 +20,15 @@ const (
 	upload    = "Error during upload"
 )
 
-func handleErrors(err error, message string) {
+// handleErrors - In case of error finish the execution with an exception and a message
+func HandleErrors(err error, message string) {
 	if err != nil {
 		log.Fatal(message)
 	}
 }
 
+// main - The main code responsible to receive the command-line flags, and all steps to send the file to
+// the Microsoft Azure Storage.
 func main() {
 	accountName := flag.String("accountname", "", "Azure Storage Account")
 	accountKey := flag.String("accountkey", "", "Azure Account Key")
@@ -32,7 +37,7 @@ func main() {
 	flag.Parse()
 
 	credential, err := azblob.NewSharedKeyCredential(*accountName, *accountKey)
-	handleErrors(err, fmt.Sprintf("%s - account name: %s, account key: %s", sharedKey, *accountName, *accountKey))
+	HandleErrors(err, fmt.Sprintf("%s - account name: %s, account key: %s", sharedKey, *accountName, *accountKey))
 
 	p := azblob.NewPipeline(credential, azblob.PipelineOptions{})
 
@@ -42,14 +47,15 @@ func main() {
 	ctx := context.Background()
 
 	file, err := os.Open(*fileName)
-	handleErrors(err, fmt.Sprintf("%s: %s", localFile, *fileName))
+	HandleErrors(err, fmt.Sprintf("%s: %s", localFile, *fileName))
 	blobURL := containerURL.NewBlockBlobURL(filepath.Base(*fileName))
 
 	_, err = azblob.UploadFileToBlockBlob(ctx, file, blobURL, azblob.UploadToBlockBlobOptions{
 		BlockSize:   4 * 1024 * 1024,
 		Parallelism: 16})
-	handleErrors(err, fmt.Sprintf("%s: %s", upload, blobURL.BlobURL))
+	HandleErrors(err, fmt.Sprintf("%s: %s", upload, blobURL.BlobURL))
 
+	file.Close()
 	//log.Print(blobURL.BlobURL)
 	fmt.Println(blobURL.BlobURL)
 }
